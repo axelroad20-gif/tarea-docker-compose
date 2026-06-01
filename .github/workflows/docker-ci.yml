@@ -1,0 +1,35 @@
+name: CI/CD Docker Compose
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar repositorio
+        uses: actions/checkout@v3
+
+      - name: 2. Verificar version de Docker
+        run: docker --version
+
+      - name: 3. Construir servicios con Docker Compose
+        run: docker compose up --build -d
+
+      - name: 4. Esperar a que los servicios inicien
+        run: sleep 20
+
+      - name: 5. Probar que la API responde correctamente
+        run: curl -f http://localhost:3000/tareas
+
+      - name: 6. Mostrar contenedores activos
+        run: docker compose ps
+
+      - name: 7. Revisar logs del sistema
+        run: docker compose logs --tail=30
+
+      - name: 8. Apagar el stack
+        run: docker compose down

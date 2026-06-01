@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Tareas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 40px 20px; }
+    .container { background: white; border-radius: 12px; padding: 30px; width: 100%; max-width: 500px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #333; margin-bottom: 24px; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    button { padding: 10px 16px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #4338ca; }
+    ul { list-style: none; }
+    li { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+    li.completada span { text-decoration: line-through; color: #aaa; }
+    .acciones { display: flex; gap: 8px; }
+    .btn-check { background: #10b981; }
+    .btn-check:hover { background: #059669; }
+    .btn-del { background: #ef4444; }
+    .btn-del:hover { background: #dc2626; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Lista de Tareas</h1>
+    <div class="input-group">
+      <input type="text" id="inputTarea" placeholder="Nueva tarea..." />
+      <button onclick="agregarTarea()">Agregar</button>
+    </div>
+    <ul id="listaTareas"></ul>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+
+    async function cargarTareas() {
+      const res = await fetch(`${API}/tareas`);
+      const tareas = await res.json();
+      const lista = document.getElementById('listaTareas');
+      lista.innerHTML = '';
+      tareas.forEach(t => {
+        const li = document.createElement('li');
+        if (t.completada) li.classList.add('completada');
+        li.innerHTML = `
+          <span>${t.titulo}</span>
+          <div class="acciones">
+            <button class="btn-check" onclick="toggleTarea(${t.id})">✓</button>
+            <button class="btn-del" onclick="eliminarTarea(${t.id})">✕</button>
+          </div>`;
+        lista.appendChild(li);
+      });
+    }
+
+    async function agregarTarea() {
+      const input = document.getElementById('inputTarea');
+      if (!input.value.trim()) return;
+      await fetch(`${API}/tareas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo: input.value })
+      });
+      input.value = '';
+      cargarTareas();
+    }
+
+    async function toggleTarea(id) {
+      await fetch(`${API}/tareas/${id}`, { method: 'PUT' });
+      cargarTareas();
+    }
+
+    async function eliminarTarea(id) {
+      await fetch(`${API}/tareas/${id}`, { method: 'DELETE' });
+      cargarTareas();
+    }
+
+    cargarTareas();
+  </script>
+</body>
+</html>
